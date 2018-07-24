@@ -1,9 +1,7 @@
 package com.kelvin.app.util;
 
-import io.jsonwebtoken.Claims;
-import io.jsonwebtoken.JwtBuilder;
-import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.SignatureAlgorithm;
+import com.kelvin.app.exception.AuthenticationException;
+import io.jsonwebtoken.*;
 
 import javax.crypto.spec.SecretKeySpec;
 import javax.xml.bind.DatatypeConverter;
@@ -12,31 +10,36 @@ import java.util.Date;
 public class JwtHelper {
 
     public static Claims parseJWT(String token, String base64Security) {
-        return Jwts.parser().setSigningKey(DatatypeConverter.parseBase64Binary(base64Security))
-                .parseClaimsJws(token).getBody();
+        try {
+            //OK, we can trust this JWT
+            return Jwts.parser().setSigningKey(DatatypeConverter.parseBase64Binary(base64Security))
+                    .parseClaimsJws(token).getBody();
+        } catch (Exception e) {
+            //Not OK, we can not trust this JWT
+            throw new AuthenticationException("Authentication Failed");
+        }
     }
 
-    public static String creatJWT(String name, String userId, String role, String audience,
-                String issuer, long millis, String base64Security) {
-        SignatureAlgorithm sign = SignatureAlgorithm.HS256;
+    public static String createJWT(String name, String userId, String role, String audience,
+                                   String issuer, long expireMillis, String base64Security) {
 
         // 生成签发密钥
         byte[] base64Binary = DatatypeConverter.parseBase64Binary(base64Security);
-        SecretKeySpec secretKeySpec = new SecretKeySpec(base64Binary, sign.getJcaName());
+        SecretKeySpec secretKey = new SecretKeySpec(base64Binary, SignatureAlgorithm.HS256.getJcaName());
 
         JwtBuilder builder = Jwts.builder()
                 .setHeaderParam("type", "JWT")
                 .claim("role", role)
-                .claim("uniqueName", name)
-                .claim("userid", userId)
+                .claim("name", name)
+                .claim("userId", userId)
                 .setIssuer(issuer)
                 .setAudience(audience)
-                .signWith(sign, secretKeySpec);
+                .signWith(SignatureAlgorithm.HS256, secretKey);
 
         long nowMillis = System.currentTimeMillis();
         Date now = new Date(nowMillis);
-        if (millis >= 0) {
-            long expMillis = nowMillis + millis;
+        if (expireMillis >= 0) {
+            long expMillis = nowMillis + expireMillis;
             Date exp = new Date(expMillis);
             builder.setExpiration(exp).setNotBefore(now);
         }

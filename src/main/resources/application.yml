@@ -1,5 +1,20 @@
 audience:
-  clientId: 098f6bcd4621d373cade4e832627b4f6
+  clientId: maike
   base64Secret: MDk4ZjZiY2Q0NjIxZDM3M2NhZGU0ZTgzMjYyN2I0ZjY=
-  name: restapiuser
-  expiresSecond: 172800
+  name: kelvin
+  expiresSecond: 3600
+server:
+  port: 9090
+spring:
+  freemarker:
+    allow-request-override: false
+    cache: true
+    check-template-location: true
+    charset: utf-8
+    content-type: text/html
+    expose-request-attributes: false
+    expose-spring-macro-helpers: false
+    expose-session-attributes: false
+    suffix: .html
+    request-context-attribute: freemarker
+    template-loader-path: classpath:/templates/
